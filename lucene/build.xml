@@ -75,6 +75,9 @@
   <target name="compile" depends="init,compile-lucene-core,compile-codecs"
           description="Compiles core, codecs, and all modules">
     <modules-crawl target="compile-core"/>
+    <copy todir="build">
+      <fileset dir="lib/"/>
+    </copy>
   </target>
 
   <!-- Validation (license/notice/api checks). -->

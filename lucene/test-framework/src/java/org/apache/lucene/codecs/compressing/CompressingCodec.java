@@ -36,7 +36,7 @@ public abstract class CompressingCodec extends FilterCodec {
    * Create a random instance.
    */
   public static CompressingCodec randomInstance(Random random, int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
-    switch (random.nextInt(4)) {
+    switch (random.nextInt(6)) {
     case 0:
       return new FastCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
     case 1:
@@ -45,13 +45,17 @@ public abstract class CompressingCodec extends FilterCodec {
       return new HighCompressionCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
     case 3:
       return new DummyCompressingCodec(chunkSize, maxDocsPerChunk, withSegmentSuffix, blockSize);
+      case 4:
+        return new QatCompressionCompressingCodec(chunkSize,maxDocsPerChunk,withSegmentSuffix,blockSize);
+      case 5:
+        return new QatCompressionCompressingCodec();
     default:
       throw new AssertionError();
     }
   }
 
   /**
-   * Creates a random {@link CompressingCodec} that is using an empty segment 
+   * Creates a random {@link CompressingCodec} that is using an empty segment
    * suffix
    */
   public static CompressingCodec randomInstance(Random random) {
@@ -73,14 +77,14 @@ public abstract class CompressingCodec extends FilterCodec {
     final int blockSize = TestUtil.nextInt(random, 1<<9, 1<<11);
     return randomInstance(random, chunkSize, chunkDocs, false, blockSize);
   }
-  
+
   /**
    * Creates a random {@link CompressingCodec} that is using a segment suffix
    */
   public static CompressingCodec randomInstance(Random random, boolean withSegmentSuffix) {
-    return randomInstance(random, 
-                          RandomNumbers.randomIntBetween(random, 1, 1 << 15), 
-                          RandomNumbers.randomIntBetween(random, 64, 1024), 
+    return randomInstance(random,
+                          RandomNumbers.randomIntBetween(random, 1, 1 << 15),
+                          RandomNumbers.randomIntBetween(random, 64, 1024),
                           withSegmentSuffix,
                           RandomNumbers.randomIntBetween(random, 1, 1024));
   }
@@ -96,7 +100,7 @@ public abstract class CompressingCodec extends FilterCodec {
     this.storedFieldsFormat = new CompressingStoredFieldsFormat(name, segmentSuffix, compressionMode, chunkSize, maxDocsPerChunk, blockSize);
     this.termVectorsFormat = new CompressingTermVectorsFormat(name, segmentSuffix, compressionMode, chunkSize, blockSize);
   }
-  
+
   /**
    * Creates a compressing codec with an empty segment suffix
    */

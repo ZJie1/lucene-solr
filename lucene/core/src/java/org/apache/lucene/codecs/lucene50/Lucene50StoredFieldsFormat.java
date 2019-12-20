@@ -145,7 +145,9 @@ public final class Lucene50StoredFieldsFormat extends StoredFieldsFormat {
     /** Trade compression ratio for retrieval speed. */
     BEST_SPEED,
     /** Trade retrieval speed for compression ratio. */
-    BEST_COMPRESSION
+    BEST_COMPRESSION,
+    /** QAT */
+    QAT
   }
   
   /** Attribute key for compression mode. */
@@ -189,6 +191,8 @@ public final class Lucene50StoredFieldsFormat extends StoredFieldsFormat {
         return new CompressingStoredFieldsFormat("Lucene50StoredFieldsFast", CompressionMode.FAST, 1 << 14, 128, 1024);
       case BEST_COMPRESSION: 
         return new CompressingStoredFieldsFormat("Lucene50StoredFieldsHigh", CompressionMode.HIGH_COMPRESSION, 61440, 512, 1024);
+      case QAT:
+        return new CompressingStoredFieldsFormat("Lucene50StoredFieldsQAT",CompressionMode.QAT,61440,512,1024);
       default: throw new AssertionError();
     }
   }

@@ -29,10 +29,13 @@
   <path id="classpath">
     <!-- TODO: we need this for forbidden-apis to be happy, because it does not support "includeantruntime": -->
     <fileset dir="lib"/>
+    <pathelement location="../lib/"/>
   </path>
 
-  <path id="test.classpath"/>
-
+  <!--<path id="test.classpath"/>-->
+  <path id="test.classpath">
+    <pathelement location="../lib/"/>
+  </path>
   <!-- redefine the test compilation, -test and -check-totals, so these are just no-ops -->
   <target name="compile-test"/>
   <target name="-test"/>

@@ -57,7 +57,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
   }
 
   static byte[] compress(Compressor compressor, byte[] decompressed, int off, int len) throws IOException {
-    byte[] compressed = new byte[len * 2 + 16]; // should be enough
+    byte[] compressed = new byte[len * 2 + 1000]; // should be enough
     ByteArrayDataOutput out = new ByteArrayDataOutput(compressed);
     compressor.compress(decompressed, off, len, out);
     final int compressedLen = out.getPosition();

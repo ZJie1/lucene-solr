@@ -126,7 +126,7 @@ public abstract class CompressionMode {
 
     @Override
     public Decompressor newDecompressor() {
-      return new QatDecompressor();
+      return new QatDecompressor(655360);
     }
 
     @Override
@@ -319,11 +319,16 @@ public abstract class CompressionMode {
   private static final class QatDecompressor extends Decompressor {
 
     byte[] compressed;
+    int directBufferSize;
 
     QatDecompressor() {
       compressed = new byte[0];
     }
 
+    QatDecompressor(int directBufferSize){
+      this.directBufferSize = directBufferSize;
+      compressed = new byte[0];
+    }
     @Override
     public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
       assert offset + length <= originalLength;
@@ -339,14 +344,20 @@ public abstract class CompressionMode {
       in.readBytes(compressed, 0, compressedLength);
       compressed[compressedLength] = 0; // explicitly set dummy byte to 0
 
-      final QatDecompressorJNI decompressor = new QatDecompressorJNI();
+      final QatDecompressorJNI decompressor = new QatDecompressorJNI(directBufferSize);
       try {
         // extra "dummy byte"
         decompressor.setInput(compressed, 0, paddedLength);
 
         bytes.offset = bytes.length = 0;
         bytes.bytes = ArrayUtil.grow(bytes.bytes, originalLength);
-        bytes.length = decompressor.decompress(bytes.bytes, bytes.length, originalLength);
+        try{
+          //bytes.length = decompressor.decompress(bytes.bytes, offset, originalLength);
+          bytes.length = decompressor.decompress(bytes.bytes, bytes.length, originalLength);
+        }catch (IOException e){
+          throw new IOException(e);
+        }
+
         if (!decompressor.finished()) {
           throw new CorruptIndexException("Invalid decoder state: needsInput=" + decompressor.needsInput()
               + ", needsDict=" + decompressor.needsDictionary(), in);
@@ -385,12 +396,12 @@ public abstract class CompressionMode {
       compressor.setInput(bytes, off, len);
       compressor.finish();
 
-      if (compressor.needsInput()) {
+ /*     if (compressor.needsInput()) {
         // no output
-        assert len == 0 : len;
+      //  assert len == 0 : len;
         out.writeVInt(0);
         return;
-      }
+      }*/
 
       int totalCount = 0;
       for (;;) {

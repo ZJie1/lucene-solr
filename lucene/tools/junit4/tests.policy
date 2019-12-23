@@ -28,6 +28,12 @@ grant {
   // should be enclosed within common.dir, but just in case:
   permission java.io.FilePermission "${junit4.childvm.cwd}", "read";
 
+ // the system files
+ permission java.io.FilePermission "/lib64", "read,execute";
+ permission java.io.FilePermission "/lib", "read,execute";
+ permission java.io.FilePermission "/lib64", "read,execute";
+ permission java.lang.RuntimePermission "loadLibrary.*";
+
   // write only to sandbox
   permission java.io.FilePermission "${junit4.childvm.cwd}${/}temp", "read,write,delete";
   permission java.io.FilePermission "${junit4.childvm.cwd}${/}temp${/}-", "read,write,delete";
@@ -70,6 +76,8 @@ grant {
   permission java.lang.RuntimePermission "getenv.*";
   permission java.lang.RuntimePermission "getClassLoader";
   permission java.lang.RuntimePermission "setContextClassLoader";
+   permission java.lang.RuntimePermission "*";
+
 
   // read access to all system properties:
   permission java.util.PropertyPermission "*", "read";

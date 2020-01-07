@@ -18,6 +18,7 @@ package org.apache.lucene.codecs.compressing;
 
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import org.apache.lucene.store.ByteArrayDataInput;
@@ -32,7 +33,6 @@ import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 public abstract class AbstractTestCompressionMode extends LuceneTestCase {
 
   CompressionMode mode;
-
   static byte[] randomArray() {
     final int max = random().nextBoolean()
         ? random().nextInt(4)
@@ -94,6 +94,17 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     }
   }
 
+  public void testDecompress1() throws IOException{
+    final int iterations = 2;
+    for (int i = 0; i < iterations; i++){
+      final byte[] decompressed = new byte[]{1,2,3,4}; // 8
+      final int off = 1;
+      final int len = 3;
+      final byte[] compressed = compress(decompressed, off, len);
+      final byte[] restored = decompress(compressed, len);
+      assertArrayEquals(ArrayUtil.copyOfSubArray(decompressed,off,off+len),restored);
+    }
+  }
   public void testPartialDecompress() throws IOException {
     final int iterations = atLeast(10);
     for (int i = 0; i < iterations; ++i) {

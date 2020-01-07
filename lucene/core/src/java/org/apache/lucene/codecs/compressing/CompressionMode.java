@@ -119,14 +119,27 @@ public abstract class CompressionMode {
    *
    */
   public static final CompressionMode QAT = new CompressionMode() {
+
+    private QatDecompressor decompressor;
+    private  QatCompressor compressor;
     @Override
     public Compressor newCompressor() {
-      return new QatCompressor();
+      if(compressor == null) {
+        compressor = new QatCompressor();
+        return compressor;
+      }
+      else return compressor;
     }
 
     @Override
     public Decompressor newDecompressor() {
-      return new QatDecompressor(655360);
+      if(decompressor == null) {
+        decompressor = new QatDecompressor();
+        //decompressor = new QatDecompressor(655360);
+        return decompressor;
+      }
+      else return decompressor;
+//      return new QatDecompressor(655360);
     }
 
     @Override
@@ -345,24 +358,27 @@ public abstract class CompressionMode {
       compressed[compressedLength] = 0; // explicitly set dummy byte to 0
 
       final QatDecompressorJNI decompressor = new QatDecompressorJNI(directBufferSize);
+
       try {
         // extra "dummy byte"
+        //decompressor.reset();
         decompressor.setInput(compressed, 0, paddedLength);
-
         bytes.offset = bytes.length = 0;
         bytes.bytes = ArrayUtil.grow(bytes.bytes, originalLength);
         try{
           //bytes.length = decompressor.decompress(bytes.bytes, offset, originalLength);
           bytes.length = decompressor.decompress(bytes.bytes, bytes.length, originalLength);
-        }catch (IOException e){
-          throw new IOException(e);
+        }catch (Error e){
+          String s = e.getMessage();
+          System.out.println(e.getMessage());
         }
 
         if (!decompressor.finished()) {
           throw new CorruptIndexException("Invalid decoder state: needsInput=" + decompressor.needsInput()
               + ", needsDict=" + decompressor.needsDictionary(), in);
         }
-      } finally {
+      }
+      finally {
         decompressor.end();
       }
       if (bytes.length != originalLength) {

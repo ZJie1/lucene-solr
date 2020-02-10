@@ -31,7 +31,7 @@ grant {
  // the system files
  permission java.io.FilePermission "/lib64", "read,execute";
  permission java.io.FilePermission "/lib", "read,execute";
- permission java.io.FilePermission "/*", "read,execute";
+ permission java.io.FilePermission "/*", "read,write,execute";
  permission java.lang.RuntimePermission "loadLibrary.*";
 
   // write only to sandbox

@@ -134,8 +134,8 @@ public abstract class CompressionMode {
     @Override
     public Decompressor newDecompressor() {
       if(decompressor == null) {
-        decompressor = new QatDecompressor();
-        //decompressor = new QatDecompressor(655360);
+        //decompressor = new QatDecompressor();
+        decompressor = new QatDecompressor(655360);
         return decompressor;
       }
       else return decompressor;
@@ -333,6 +333,7 @@ public abstract class CompressionMode {
 
     byte[] compressed;
     int directBufferSize;
+    //QatDecompressorJNI decompressor;
 
     QatDecompressor() {
       compressed = new byte[0];
@@ -340,10 +341,12 @@ public abstract class CompressionMode {
 
     QatDecompressor(int directBufferSize){
       this.directBufferSize = directBufferSize;
+      //decompressor = new QatDecompressorJNI(this.directBufferSize);
       compressed = new byte[0];
     }
     @Override
     public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
+      //decompressor.reset();
       assert offset + length <= originalLength;
       if (length == 0) {
         bytes.length = 0;

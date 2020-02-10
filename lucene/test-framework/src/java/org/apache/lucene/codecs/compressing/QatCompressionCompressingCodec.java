@@ -26,7 +26,7 @@ public class QatCompressionCompressingCodec extends CompressingCodec {
   public QatCompressionCompressingCodec(int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
     super("QatCompressionCompressingStoredFields",
         withSegmentSuffix ? "QatCompressionCompressingStoredFields" : "",
-        CompressionMode.HIGH_COMPRESSION, chunkSize, maxDocsPerChunk, blockSize);
+        CompressionMode.QAT, chunkSize, maxDocsPerChunk, blockSize);
   }
 
   /** Default constructor. */

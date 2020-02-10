@@ -34,6 +34,7 @@ public class TestLucene50StoredFieldsFormatHighCompression extends BaseStoredFie
   @Override
   protected Codec getCodec() {
     return new Lucene80Codec(Mode.BEST_COMPRESSION);
+    //return new Lucene80Codec(Mode.QAT);
   }
   
   /**

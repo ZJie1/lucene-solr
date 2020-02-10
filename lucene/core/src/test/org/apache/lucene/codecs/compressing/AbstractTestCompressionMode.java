@@ -95,7 +95,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
   }
 
   public void testDecompress1() throws IOException{
-    final int iterations = 2;
+    final int iterations = 10;
     for (int i = 0; i < iterations; i++){
       final byte[] decompressed = new byte[]{1,2,3,4}; // 8
       final int off = 1;

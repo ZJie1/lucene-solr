@@ -17,6 +17,8 @@
 
 package org.apache.lucene.codecs.compressing;
 
+import org.apache.lucene.util.TestRuleLimitSysouts;
+
 public class TestQatCompressionDecompressionMode extends AbstractTestCompressionMode {
   @Override
   public void setUp() throws Exception {

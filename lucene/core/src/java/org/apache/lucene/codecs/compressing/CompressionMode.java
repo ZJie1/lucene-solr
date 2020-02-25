@@ -139,7 +139,8 @@ public abstract class CompressionMode {
         return decompressor;
       }
       else return decompressor;
-//      return new QatDecompressor(655360);
+     //return new QatDecompressor(655360);
+      //return new QatDecompressor();
     }
 
     @Override
@@ -332,10 +333,11 @@ public abstract class CompressionMode {
   private static final class QatDecompressor extends Decompressor {
 
     byte[] compressed;
-    int directBufferSize;
+    int directBufferSize=655360;
     //QatDecompressorJNI decompressor;
 
     QatDecompressor() {
+     // this.directBufferSize = 655360;
       compressed = new byte[0];
     }
 
@@ -357,11 +359,12 @@ public abstract class CompressionMode {
       // we do it for compliance, but it's unnecessary for years in zlib.
       //final int paddedLength = compressedLength + 1;
       final int paddedLength = compressedLength;
-      compressed = ArrayUtil.grow(compressed, paddedLength);
+      compressed = ArrayUtil.grow(compressed, paddedLength+1);
       in.readBytes(compressed, 0, compressedLength);
       compressed[compressedLength] = 0; // explicitly set dummy byte to 0
 
       final QatDecompressorJNI decompressor = new QatDecompressorJNI(directBufferSize);
+      //final QatDecompressorJNI decompressor = new QatDecompressorJNI();
 
       try {
         // extra "dummy byte"
@@ -371,6 +374,7 @@ public abstract class CompressionMode {
         bytes.bytes = ArrayUtil.grow(bytes.bytes, originalLength);
         try{
           //bytes.length = decompressor.decompress(bytes.bytes, offset, originalLength);
+          //bytes.length = decompressor.decompress(bytes.bytes,offset, length);
           bytes.length = decompressor.decompress(bytes.bytes, bytes.length, originalLength);
         }catch (Error e){
           String s = e.getMessage();
@@ -378,7 +382,7 @@ public abstract class CompressionMode {
         }
 
         if (!decompressor.finished()) {
-          throw new CorruptIndexException("Invalid decoder state: needsInput=" + decompressor.needsInput()
+          throw new CorruptIndexException("Invalid decoder state in QAT decompressor: needsInput=" + decompressor.needsInput()
               + ", needsDict=" + decompressor.needsDictionary(), in);
         }
       }
@@ -386,7 +390,7 @@ public abstract class CompressionMode {
         decompressor.end();
       }
       if (bytes.length != originalLength) {
-        throw new CorruptIndexException("Lengths mismatch: " + bytes.length + " != " + originalLength, in);
+        throw new CorruptIndexException("Lengths mismatch in QAT decompressor: " + bytes.length + " != " + originalLength, in);
       }
       bytes.offset = offset;
       bytes.length = length;
@@ -416,9 +420,9 @@ public abstract class CompressionMode {
       compressor.setInput(bytes, off, len);
       compressor.finish();
 
- /*     if (compressor.needsInput()) {
+  /*    if (!compressor.needsInput()) {
         // no output
-      //  assert len == 0 : len;
+        assert len == 0 : len;
         out.writeVInt(0);
         return;
       }*/

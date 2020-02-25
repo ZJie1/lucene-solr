@@ -38,7 +38,9 @@ import org.apache.lucene.index.TermsEnum.SeekStatus;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.TestRuleLimitSysouts;
 
+@TestRuleLimitSysouts.Limit(bytes=204200)
 public class TestCompressingTermVectorsFormat extends BaseTermVectorsFormatTestCase {
 
   @Override
@@ -56,6 +58,7 @@ public class TestCompressingTermVectorsFormat extends BaseTermVectorsFormatTestC
     doc.add(new Field("foo", "this is a test", ft));
     iw.addDocument(doc);
     LeafReader ir = getOnlyLeafReader(iw.getReader());
+    System.out.println(">>>-------------- TesrCompressingTermVectorsFormat ----------------------<<<");
     Terms terms = ir.getTermVector(0, "foo");
     assertNotNull(terms);
     TermsEnum termsEnum = terms.iterator();
@@ -112,6 +115,7 @@ public class TestCompressingTermVectorsFormat extends BaseTermVectorsFormatTestC
       }
     }
     iw.getConfig().setMergePolicy(newLogMergePolicy());
+    System.out.println(">>>>----CompressingTermVectorsFormat  20200225 --------------<<<<");
     iw.forceMerge(1);
     DirectoryReader ir2 = DirectoryReader.openIfChanged(ir);
     assertNotNull(ir2);

@@ -42,7 +42,8 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     final int length = random().nextBoolean()
         ? random().nextInt(20)
         : random().nextInt(192 * 1024);
-    return randomArray(length, max);
+     return randomArray(length, max);
+    //return randomArray(200000,max);
   }
 
   static byte[] randomArray(int length, int max) {
@@ -98,7 +99,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
 
 
   public void testDecompress1() throws IOException{
-    final int iterations = 1000;
+    final int iterations = 2;
     for (int i = 0; i < iterations; i++){
       final byte[] decompressed = new byte[]{1,2,3,4,7,8,6,5,9,10}; // 8
       final int off = 1;
@@ -112,6 +113,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     final int iterations = atLeast(10);
     for (int i = 0; i < iterations; ++i) {
       final byte[] decompressed = randomArray();
+      System.out.println(decompressed.length);
       final byte[] compressed = compress(decompressed, 0, decompressed.length);
       final int offset, length;
       if (decompressed.length == 0) {

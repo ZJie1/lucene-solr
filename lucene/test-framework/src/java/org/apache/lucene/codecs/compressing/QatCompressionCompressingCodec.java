@@ -17,19 +17,22 @@
 
 package org.apache.lucene.codecs.compressing;
 
-import org.apache.lucene.codecs.compressing.CompressingCodec;
-import org.apache.lucene.codecs.compressing.CompressionMode;
-
-/** CompressionCodec that uses {@link CompressionMode#QAT} */
+/**
+ * CompressionCodec that uses {@link CompressionMode#QAT}
+ */
 public class QatCompressionCompressingCodec extends CompressingCodec {
-  /** Constructor that allows to configure the chunk size. */
+  /**
+   * Constructor that allows to configure the chunk size.
+   */
   public QatCompressionCompressingCodec(int chunkSize, int maxDocsPerChunk, boolean withSegmentSuffix, int blockSize) {
     super("QatCompressionCompressingStoredFields",
         withSegmentSuffix ? "QatCompressionCompressingStoredFields" : "",
         CompressionMode.QAT, chunkSize, maxDocsPerChunk, blockSize);
   }
 
-  /** Default constructor. */
+  /**
+   * Default constructor.
+   */
   public QatCompressionCompressingCodec() {
     // we don't worry about zlib block overhead as it's
     // not bad and try to save space instead:

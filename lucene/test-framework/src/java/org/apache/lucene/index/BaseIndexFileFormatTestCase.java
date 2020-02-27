@@ -245,7 +245,6 @@ abstract class BaseIndexFileFormatTestCase extends LuceneTestCase {
     mp.setNoCFSRatio(0);
     cfg = new IndexWriterConfig(new MockAnalyzer(random())).setUseCompoundFile(false).setMergePolicy(mp);
     w = new IndexWriter(dir2, cfg);
-     System.out.println(">>>>-------SerialMergeScheduler   test-----------<<<<<");
     TestUtil.addIndexesSlowly(w, reader);
 
     w.commit();

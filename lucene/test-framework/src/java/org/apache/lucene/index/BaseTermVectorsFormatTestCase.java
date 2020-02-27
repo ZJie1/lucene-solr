@@ -620,7 +620,6 @@ public abstract class BaseTermVectorsFormatTestCase extends BaseIndexFileFormatT
         writer.addDocument(addId(doc2.toDocument(), "2"));
         final IndexReader reader = writer.getReader();
         final int doc1ID = docID(reader, "1");
-        System.out.println(">>>-----------BaseTermVectorsFormatTestCase  20200225 -------------------------<<<");
         assertEquals(doc1, reader.getTermVectors(doc1ID));
         final int doc2ID = docID(reader, "2");
         assertEquals(doc2, reader.getTermVectors(doc2ID));
@@ -678,7 +677,6 @@ public abstract class BaseTermVectorsFormatTestCase extends BaseIndexFileFormatT
         writer.deleteDocuments(new Term("id", "" + delete));
       }
       // merge with deletes
-      System.out.println("---------------------test 20200225--------------------------");
       writer.forceMerge(1);
       final IndexReader reader = writer.getReader();
       for (int i = 0; i < numDocs; ++i) {
@@ -761,7 +759,6 @@ public abstract class BaseTermVectorsFormatTestCase extends BaseIndexFileFormatT
     iw.addDocument(doc);
     DirectoryReader reader = DirectoryReader.open(iw);
 
-    System.out.println(">>>>---------------termVectorsFormatTest    20200225 ------------------------<<<<");
     Terms terms = getOnlyLeafReader(reader).getTermVector(0, "foo");
     TermsEnum termsEnum = terms.iterator();
     assertNotNull(termsEnum);
@@ -1207,7 +1204,6 @@ public abstract class BaseTermVectorsFormatTestCase extends BaseIndexFileFormatT
     doc.add(new Field("foo", "bar bar", ft));
     iw.addDocument(doc);
     DirectoryReader reader = DirectoryReader.open(iw);
-    System.out.println(">>>---------------test  2020225 -----------------------<<");
     Terms terms = getOnlyLeafReader(reader).getTermVector(0, "foo");
     TermsEnum termsEnum = terms.iterator();
     assertNotNull(termsEnum);

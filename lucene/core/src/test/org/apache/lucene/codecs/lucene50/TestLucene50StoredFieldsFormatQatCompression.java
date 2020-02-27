@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.lucene.codecs.lucene50;
 
+package org.apache.lucene.codecs.lucene50;
 
 import com.carrotsearch.randomizedtesting.generators.RandomPicks;
 import org.apache.lucene.codecs.Codec;
@@ -29,10 +29,10 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 
-public class TestLucene50StoredFieldsFormatHighCompression extends BaseStoredFieldsFormatTestCase {
+public class TestLucene50StoredFieldsFormatQatCompression extends BaseStoredFieldsFormatTestCase {
   @Override
   protected Codec getCodec() {
-    return new Lucene80Codec(Mode.BEST_COMPRESSION);
+    return new Lucene80Codec(Mode.QAT);
   }
 
   /**
@@ -43,7 +43,7 @@ public class TestLucene50StoredFieldsFormatHighCompression extends BaseStoredFie
     Directory dir = newDirectory();
     for (int i = 0; i < 10; i++) {
       IndexWriterConfig iwc = newIndexWriterConfig();
-      iwc.setCodec(new Lucene80Codec(RandomPicks.randomFrom(random(), Mode.values())));
+      iwc.setCodec(new Lucene80Codec(RandomPicks.randomFrom(random(), Lucene50StoredFieldsFormat.Mode.values())));
       IndexWriter iw = new IndexWriter(dir, newIndexWriterConfig());
       Document doc = new Document();
       doc.add(new StoredField("field1", "value1"));

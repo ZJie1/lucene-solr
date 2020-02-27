@@ -622,7 +622,6 @@ public class ConcurrentMergeScheduler extends MergeScheduler {
 
   /** Does the actual merge, by calling {@link IndexWriter#merge} */
   protected void doMerge(IndexWriter writer, OneMerge merge) throws IOException {
-    System.out.println(">---------ConcurrentMergeScheduler   20200225 test ---------------<<<<");
     writer.merge(merge);
   }
 

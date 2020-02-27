@@ -4052,7 +4052,6 @@ public class IndexWriter implements Closeable, TwoPhaseCommit, Accountable,
           if (infoStream.isEnabled("IW")) {
             infoStream.message("IW", "now merge\n  merge=" + segString(merge.segments) + "\n  index=" + segString());
           }
-          System.out.println(">>>-----IndexWriter mergeMiddle -------------<<<<");
           mergeMiddle(merge, mergePolicy);
           mergeSuccess(merge);
           success = true;

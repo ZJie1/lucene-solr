@@ -18,9 +18,9 @@ package org.apache.lucene.codecs.compressing;
 
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
+import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
 import org.apache.lucene.store.ByteArrayDataInput;
 import org.apache.lucene.store.ByteArrayDataOutput;
 import org.apache.lucene.util.ArrayUtil;
@@ -29,12 +29,11 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestRuleLimitSysouts;
 import org.apache.lucene.util.TestUtil;
 
-import com.carrotsearch.randomizedtesting.generators.RandomNumbers;
-
-@TestRuleLimitSysouts.Limit(bytes=204200)
+@TestRuleLimitSysouts.Limit(bytes = 204200)
 public abstract class AbstractTestCompressionMode extends LuceneTestCase {
 
   CompressionMode mode;
+
   static byte[] randomArray() {
     final int max = random().nextBoolean()
         ? random().nextInt(4)
@@ -42,8 +41,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     final int length = random().nextBoolean()
         ? random().nextInt(20)
         : random().nextInt(192 * 1024);
-     return randomArray(length, max);
-    //return randomArray(200000,max);
+    return randomArray(length, max);
   }
 
   static byte[] randomArray(int length, int max) {
@@ -54,11 +52,6 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     return arr;
   }
 
-  byte[] compress(byte[] decompressed, int off, int len) throws IOException {
-    Compressor compressor = mode.newCompressor();
-    return compress(compressor, decompressed, off, len);
-  }
-
   static byte[] compress(Compressor compressor, byte[] decompressed, int off, int len) throws IOException {
     byte[] compressed = new byte[len * 2 + 1000]; // should be enough
     ByteArrayDataOutput out = new ByteArrayDataOutput(compressed);
@@ -67,15 +60,20 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     return ArrayUtil.copyOfSubArray(compressed, 0, compressedLen);
   }
 
-  byte[] decompress(byte[] compressed, int originalLength) throws IOException {
-    Decompressor decompressor = mode.newDecompressor();
-    return decompress(decompressor, compressed, originalLength);
-  }
-
   static byte[] decompress(Decompressor decompressor, byte[] compressed, int originalLength) throws IOException {
     final BytesRef bytes = new BytesRef();
     decompressor.decompress(new ByteArrayDataInput(compressed), originalLength, 0, originalLength, bytes);
     return BytesRef.deepCopyOf(bytes).bytes;
+  }
+
+  byte[] compress(byte[] decompressed, int off, int len) throws IOException {
+    Compressor compressor = mode.newCompressor();
+    return compress(compressor, decompressed, off, len);
+  }
+
+  byte[] decompress(byte[] compressed, int originalLength) throws IOException {
+    Decompressor decompressor = mode.newDecompressor();
+    return decompress(decompressor, compressed, originalLength);
   }
 
   byte[] decompress(byte[] compressed, int originalLength, int offset, int length) throws IOException {
@@ -86,34 +84,34 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
   }
 
   public void testDecompress() throws IOException {
-    final int iterations = atLeast( 10);
+    final int iterations = atLeast(10);
     for (int i = 0; i < iterations; ++i) {
       final byte[] decompressed = randomArray();
       final int off = random().nextBoolean() ? 0 : TestUtil.nextInt(random(), 0, decompressed.length);
       final int len = random().nextBoolean() ? decompressed.length - off : TestUtil.nextInt(random(), 0, decompressed.length - off);
       final byte[] compressed = compress(decompressed, off, len);
       final byte[] restored = decompress(compressed, len);
-      assertArrayEquals(ArrayUtil.copyOfSubArray(decompressed, off, off+len), restored);
+      assertArrayEquals(ArrayUtil.copyOfSubArray(decompressed, off, off + len), restored);
     }
   }
 
 
-  public void testDecompress1() throws IOException{
+  public void testDecompress1() throws IOException {
     final int iterations = 2;
-    for (int i = 0; i < iterations; i++){
-      final byte[] decompressed = new byte[]{1,2,3,4,7,8,6,5,9,10}; // 8
+    for (int i = 0; i < iterations; i++) {
+      final byte[] decompressed = new byte[]{1, 2, 3, 4, 7, 8, 6, 5, 9, 10}; // 8
       final int off = 1;
       final int len = 9;
       final byte[] compressed = compress(decompressed, off, len);
       final byte[] restored = decompress(compressed, len);
-      assertArrayEquals(ArrayUtil.copyOfSubArray(decompressed,off,off+len),restored);
+      assertArrayEquals(ArrayUtil.copyOfSubArray(decompressed, off, off + len), restored);
     }
   }
+
   public void testPartialDecompress() throws IOException {
     final int iterations = atLeast(10);
     for (int i = 0; i < iterations; ++i) {
       final byte[] decompressed = randomArray();
-      System.out.println(decompressed.length);
       final byte[] compressed = compress(decompressed, 0, decompressed.length);
       final int offset, length;
       if (decompressed.length == 0) {
@@ -143,7 +141,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
   }
 
   public void testShortSequence() throws IOException {
-    test(new byte[] { (byte) random().nextInt(256) });
+    test(new byte[]{(byte) random().nextInt(256)});
   }
 
   public void testIncompressible() throws IOException {
@@ -210,7 +208,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
         5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85,
         5, 72, 13, 85, 5, 72, 13, 72, 13, 72, 13, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 72, 13, 85, 5, 72, 13, 72,
         13, 85, 5, 72, 13, 72, 13, 85, 5, 72, 13, -19, -24, -101, -35
-      };
+    };
     test(data, 9, data.length - 9);
   }
 

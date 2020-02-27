@@ -22,45 +22,21 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+import com.intel.qat.jni.QatCompressorJNI;
+import com.intel.qat.jni.QatDecompressorJNI;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.store.DataInput;
 import org.apache.lucene.store.DataOutput;
 import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.BytesRef;
 
-import com.intel.qat.jni.QatCompressorJNI;
-import com.intel.qat.jni.QatDecompressorJNI;
 /**
  * A compression mode. Tells how much effort should be spent on compression and
  * decompression of stored fields.
+ *
  * @lucene.experimental
  */
 public abstract class CompressionMode {
-
-  /**
-   * A compression mode that trades compression ratio for speed. Although the
-   * compression ratio might remain high, compression and decompression are
-   * very fast. Use this mode with indices that have a high update rate but
-   * should be able to load documents from disk quickly.
-   */
-  public static final CompressionMode FAST = new CompressionMode() {
-
-    @Override
-    public Compressor newCompressor() {
-      return new LZ4FastCompressor();
-    }
-
-    @Override
-    public Decompressor newDecompressor() {
-      return LZ4_DECOMPRESSOR;
-    }
-
-    @Override
-    public String toString() {
-      return "FAST";
-    }
-
-  };
 
   /**
    * A compression mode that trades speed for compression ratio. Although
@@ -89,7 +65,73 @@ public abstract class CompressionMode {
     }
 
   };
+  /**
+   * This compression mode is using the QAT
+   */
+  public static final CompressionMode QAT = new CompressionMode() {
 
+    @Override
+    public Compressor newCompressor() {
+      return new QatCompressor();
+    }
+
+    @Override
+    public Decompressor newDecompressor() {
+      return new QatDecompressor();
+    }
+
+    @Override
+    public String toString() {
+      return "QAT";
+    }
+  };
+  private static final Decompressor LZ4_DECOMPRESSOR = new Decompressor() {
+
+    @Override
+    public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
+      assert offset + length <= originalLength;
+      // add 7 padding bytes, this is not necessary but can help decompression run faster
+      if (bytes.bytes.length < originalLength + 7) {
+        bytes.bytes = new byte[ArrayUtil.oversize(originalLength + 7, 1)];
+      }
+      final int decompressedLength = LZ4.decompress(in, offset + length, bytes.bytes, 0);
+      if (decompressedLength > originalLength) {
+        throw new CorruptIndexException("Corrupted: lengths mismatch: " + decompressedLength + " > " + originalLength, in);
+      }
+      bytes.offset = offset;
+      bytes.length = length;
+    }
+
+    @Override
+    public Decompressor clone() {
+      return this;
+    }
+
+  };
+  /**
+   * A compression mode that trades compression ratio for speed. Although the
+   * compression ratio might remain high, compression and decompression are
+   * very fast. Use this mode with indices that have a high update rate but
+   * should be able to load documents from disk quickly.
+   */
+  public static final CompressionMode FAST = new CompressionMode() {
+
+    @Override
+    public Compressor newCompressor() {
+      return new LZ4FastCompressor();
+    }
+
+    @Override
+    public Decompressor newDecompressor() {
+      return LZ4_DECOMPRESSOR;
+    }
+
+    @Override
+    public String toString() {
+      return "FAST";
+    }
+
+  };
   /**
    * This compression mode is similar to {@link #FAST} but it spends more time
    * compressing in order to improve the compression ratio. This compression
@@ -116,39 +158,10 @@ public abstract class CompressionMode {
   };
 
   /**
-   *
+   * Sole constructor.
    */
-  public static final CompressionMode QAT = new CompressionMode() {
-
-    private QatDecompressor decompressor;
-    private  QatCompressor compressor;
-    @Override
-    public Compressor newCompressor() {
-      if(compressor == null) {
-        compressor = new QatCompressor();
-        return compressor;
-      }
-      else return compressor;
-    }
-
-    @Override
-    public Decompressor newDecompressor() {
-      if(decompressor == null) {
-        //decompressor = new QatDecompressor();
-        decompressor = new QatDecompressor(655360);
-        return decompressor;
-      }
-      else return decompressor;
-     //return new QatDecompressor(655360);
-      //return new QatDecompressor();
-    }
-
-    @Override
-    public String toString(){ return "QAT"; }
-  };
-
-  /** Sole constructor. */
-  protected CompressionMode() {}
+  protected CompressionMode() {
+  }
 
   /**
    * Create a new {@link Compressor} instance.
@@ -159,30 +172,6 @@ public abstract class CompressionMode {
    * Create a new {@link Decompressor} instance.
    */
   public abstract Decompressor newDecompressor();
-
-  private static final Decompressor LZ4_DECOMPRESSOR = new Decompressor() {
-
-    @Override
-    public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
-      assert offset + length <= originalLength;
-      // add 7 padding bytes, this is not necessary but can help decompression run faster
-      if (bytes.bytes.length < originalLength + 7) {
-        bytes.bytes = new byte[ArrayUtil.oversize(originalLength + 7, 1)];
-      }
-      final int decompressedLength = LZ4.decompress(in, offset + length, bytes.bytes, 0);
-      if (decompressedLength > originalLength) {
-        throw new CorruptIndexException("Corrupted: lengths mismatch: " + decompressedLength + " > " + originalLength, in);
-      }
-      bytes.offset = offset;
-      bytes.length = length;
-    }
-
-    @Override
-    public Decompressor clone() {
-      return this;
-    }
-
-  };
 
   private static final class LZ4FastCompressor extends Compressor {
 
@@ -261,7 +250,7 @@ public abstract class CompressionMode {
         }
         if (!decompressor.finished()) {
           throw new CorruptIndexException("Invalid decoder state: needsInput=" + decompressor.needsInput()
-                                                              + ", needsDict=" + decompressor.needsDictionary(), in);
+              + ", needsDict=" + decompressor.needsDictionary(), in);
         }
       } finally {
         decompressor.end();
@@ -305,7 +294,7 @@ public abstract class CompressionMode {
       }
 
       int totalCount = 0;
-      for (;;) {
+      for (; ; ) {
         final int count = compressor.deflate(compressed, totalCount, compressed.length - totalCount);
         totalCount += count;
         assert totalCount <= compressed.length;
@@ -333,22 +322,19 @@ public abstract class CompressionMode {
   private static final class QatDecompressor extends Decompressor {
 
     byte[] compressed;
-    int directBufferSize=655360;
-    //QatDecompressorJNI decompressor;
+    int directBufferSize = 655360;
 
     QatDecompressor() {
-     // this.directBufferSize = 655360;
       compressed = new byte[0];
     }
 
-    QatDecompressor(int directBufferSize){
+    QatDecompressor(int directBufferSize) {
       this.directBufferSize = directBufferSize;
-      //decompressor = new QatDecompressorJNI(this.directBufferSize);
       compressed = new byte[0];
     }
+
     @Override
     public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
-      //decompressor.reset();
       assert offset + length <= originalLength;
       if (length == 0) {
         bytes.length = 0;
@@ -357,26 +343,21 @@ public abstract class CompressionMode {
       final int compressedLength = in.readVInt();
       // pad with extra "dummy byte": see javadocs for using Inflater(true)
       // we do it for compliance, but it's unnecessary for years in zlib.
-      //final int paddedLength = compressedLength + 1;
       final int paddedLength = compressedLength;
-      compressed = ArrayUtil.grow(compressed, paddedLength+1);
+      compressed = ArrayUtil.grow(compressed, paddedLength + 1);
       in.readBytes(compressed, 0, compressedLength);
       compressed[compressedLength] = 0; // explicitly set dummy byte to 0
 
-      final QatDecompressorJNI decompressor = new QatDecompressorJNI(directBufferSize);
-      //final QatDecompressorJNI decompressor = new QatDecompressorJNI();
+      final QatDecompressorJNI decompressor = new QatDecompressorJNI();
 
       try {
         // extra "dummy byte"
-        //decompressor.reset();
         decompressor.setInput(compressed, 0, paddedLength);
         bytes.offset = bytes.length = 0;
         bytes.bytes = ArrayUtil.grow(bytes.bytes, originalLength);
-        try{
-          //bytes.length = decompressor.decompress(bytes.bytes, offset, originalLength);
-          //bytes.length = decompressor.decompress(bytes.bytes,offset, length);
+        try {
           bytes.length = decompressor.decompress(bytes.bytes, bytes.length, originalLength);
-        }catch (Error e){
+        } catch (Error e) {
           String s = e.getMessage();
           System.out.println(e.getMessage());
         }
@@ -385,8 +366,7 @@ public abstract class CompressionMode {
           throw new CorruptIndexException("Invalid decoder state in QAT decompressor: needsInput=" + decompressor.needsInput()
               + ", needsDict=" + decompressor.needsDictionary(), in);
         }
-      }
-      finally {
+      } finally {
         decompressor.end();
       }
       if (bytes.length != originalLength) {
@@ -420,15 +400,8 @@ public abstract class CompressionMode {
       compressor.setInput(bytes, off, len);
       compressor.finish();
 
-  /*    if (!compressor.needsInput()) {
-        // no output
-        assert len == 0 : len;
-        out.writeVInt(0);
-        return;
-      }*/
-
       int totalCount = 0;
-      for (;;) {
+      for (; ; ) {
         final int count = compressor.compress(compressed, totalCount, compressed.length - totalCount);
         totalCount += count;
         assert totalCount <= compressed.length;

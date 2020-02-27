@@ -37,56 +37,64 @@ import org.apache.lucene.util.FutureObjects;
  * LeafReader implemented by codec APIs.
  */
 public abstract class CodecReader extends LeafReader implements Accountable {
-  
-  /** Sole constructor. (For invocation by subclass 
-   * constructors, typically implicit.) */
-  protected CodecReader() {}
-  
-  /** 
+
+  /**
+   * Sole constructor. (For invocation by subclass
+   * constructors, typically implicit.)
+   */
+  protected CodecReader() {
+  }
+
+  /**
    * Expert: retrieve thread-private StoredFieldsReader
-   * @lucene.internal 
+   *
+   * @lucene.internal
    */
   public abstract StoredFieldsReader getFieldsReader();
-  
-  /** 
+
+  /**
    * Expert: retrieve thread-private TermVectorsReader
-   * @lucene.internal 
+   *
+   * @lucene.internal
    */
   public abstract TermVectorsReader getTermVectorsReader();
-  
-  /** 
+
+  /**
    * Expert: retrieve underlying NormsProducer
-   * @lucene.internal 
+   *
+   * @lucene.internal
    */
   public abstract NormsProducer getNormsReader();
-  
-  /** 
+
+  /**
    * Expert: retrieve underlying DocValuesProducer
-   * @lucene.internal 
+   *
+   * @lucene.internal
    */
   public abstract DocValuesProducer getDocValuesReader();
-  
+
   /**
    * Expert: retrieve underlying FieldsProducer
+   *
    * @lucene.internal
    */
   public abstract FieldsProducer getPostingsReader();
 
   /**
    * Expert: retrieve underlying PointsReader
+   *
    * @lucene.internal
    */
   public abstract PointsReader getPointsReader();
-  
+
   @Override
   public final void document(int docID, StoredFieldVisitor visitor) throws IOException {
     checkBounds(docID);
     getFieldsReader().visitDocument(docID, visitor);
   }
-  
+
   @Override
   public final Fields getTermVectors(int docID) throws IOException {
-    System.out.println(">>>----------------- CodecReader  test 20200225 --------------------<<<");
     TermVectorsReader termVectorsReader = getTermVectorsReader();
     if (termVectorsReader == null) {
       return null;
@@ -94,7 +102,7 @@ public abstract class CodecReader extends LeafReader implements Accountable {
     checkBounds(docID);
     return termVectorsReader.get(docID);
   }
-  
+
   private void checkBounds(int docID) {
     FutureObjects.checkIndex(docID, maxDoc());
   }
@@ -157,7 +165,7 @@ public abstract class CodecReader extends LeafReader implements Accountable {
     }
     return getDocValuesReader().getSorted(fi);
   }
-  
+
   @Override
   public final SortedNumericDocValues getSortedNumericDocValues(String field) throws IOException {
     ensureOpen();
@@ -178,7 +186,7 @@ public abstract class CodecReader extends LeafReader implements Accountable {
     }
     return getDocValuesReader().getSortedSet(fi);
   }
-  
+
   @Override
   public final NumericDocValues getNormValues(String field) throws IOException {
     ensureOpen();
@@ -206,29 +214,29 @@ public abstract class CodecReader extends LeafReader implements Accountable {
   @Override
   protected void doClose() throws IOException {
   }
-  
+
   @Override
   public long ramBytesUsed() {
     ensureOpen();
-    
+
     // terms/postings
     long ramBytesUsed = getPostingsReader().ramBytesUsed();
-    
+
     // norms
     if (getNormsReader() != null) {
       ramBytesUsed += getNormsReader().ramBytesUsed();
     }
-    
+
     // docvalues
     if (getDocValuesReader() != null) {
       ramBytesUsed += getDocValuesReader().ramBytesUsed();
     }
-    
+
     // stored fields
     if (getFieldsReader() != null) {
       ramBytesUsed += getFieldsReader().ramBytesUsed();
     }
-    
+
     // term vectors
     if (getTermVectorsReader() != null) {
       ramBytesUsed += getTermVectorsReader().ramBytesUsed();
@@ -238,28 +246,28 @@ public abstract class CodecReader extends LeafReader implements Accountable {
     if (getPointsReader() != null) {
       ramBytesUsed += getPointsReader().ramBytesUsed();
     }
-    
+
     return ramBytesUsed;
   }
-  
+
   @Override
   public Collection<Accountable> getChildResources() {
     ensureOpen();
     final List<Accountable> resources = new ArrayList<>(6);
-    
+
     // terms/postings
     resources.add(Accountables.namedAccountable("postings", getPostingsReader()));
-    
+
     // norms
     if (getNormsReader() != null) {
       resources.add(Accountables.namedAccountable("norms", getNormsReader()));
     }
-    
+
     // docvalues
     if (getDocValuesReader() != null) {
       resources.add(Accountables.namedAccountable("docvalues", getDocValuesReader()));
     }
-    
+
     // stored fields
     if (getFieldsReader() != null) {
       resources.add(Accountables.namedAccountable("stored fields", getFieldsReader()));
@@ -274,22 +282,22 @@ public abstract class CodecReader extends LeafReader implements Accountable {
     if (getPointsReader() != null) {
       resources.add(Accountables.namedAccountable("points", getPointsReader()));
     }
-    
+
     return Collections.unmodifiableList(resources);
   }
 
   @Override
   public void checkIntegrity() throws IOException {
     ensureOpen();
-    
+
     // terms/postings
     getPostingsReader().checkIntegrity();
-    
+
     // norms
     if (getNormsReader() != null) {
       getNormsReader().checkIntegrity();
     }
-    
+
     // docvalues
     if (getDocValuesReader() != null) {
       getDocValuesReader().checkIntegrity();
@@ -299,7 +307,7 @@ public abstract class CodecReader extends LeafReader implements Accountable {
     if (getFieldsReader() != null) {
       getFieldsReader().checkIntegrity();
     }
-    
+
     // term vectors
     if (getTermVectorsReader() != null) {
       getTermVectorsReader().checkIntegrity();

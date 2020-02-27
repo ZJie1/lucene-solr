@@ -33,11 +33,34 @@ import org.apache.lucene.util.BytesRef;
 /**
  * A compression mode. Tells how much effort should be spent on compression and
  * decompression of stored fields.
- *
  * @lucene.experimental
  */
 public abstract class CompressionMode {
 
+  /**
+   * A compression mode that trades compression ratio for speed. Although the
+   * compression ratio might remain high, compression and decompression are
+   * very fast. Use this mode with indices that have a high update rate but
+   * should be able to load documents from disk quickly.
+   */
+  public static final CompressionMode FAST = new CompressionMode() {
+
+    @Override
+    public Compressor newCompressor() {
+      return new LZ4FastCompressor();
+    }
+
+    @Override
+    public Decompressor newDecompressor() {
+      return LZ4_DECOMPRESSOR;
+    }
+
+    @Override
+    public String toString() {
+      return "FAST";
+    }
+
+  };
   /**
    * A compression mode that trades speed for compression ratio. Although
    * compression and decompression might be slow, this compression mode should
@@ -65,73 +88,7 @@ public abstract class CompressionMode {
     }
 
   };
-  /**
-   * This compression mode is using the QAT
-   */
-  public static final CompressionMode QAT = new CompressionMode() {
 
-    @Override
-    public Compressor newCompressor() {
-      return new QatCompressor();
-    }
-
-    @Override
-    public Decompressor newDecompressor() {
-      return new QatDecompressor();
-    }
-
-    @Override
-    public String toString() {
-      return "QAT";
-    }
-  };
-  private static final Decompressor LZ4_DECOMPRESSOR = new Decompressor() {
-
-    @Override
-    public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
-      assert offset + length <= originalLength;
-      // add 7 padding bytes, this is not necessary but can help decompression run faster
-      if (bytes.bytes.length < originalLength + 7) {
-        bytes.bytes = new byte[ArrayUtil.oversize(originalLength + 7, 1)];
-      }
-      final int decompressedLength = LZ4.decompress(in, offset + length, bytes.bytes, 0);
-      if (decompressedLength > originalLength) {
-        throw new CorruptIndexException("Corrupted: lengths mismatch: " + decompressedLength + " > " + originalLength, in);
-      }
-      bytes.offset = offset;
-      bytes.length = length;
-    }
-
-    @Override
-    public Decompressor clone() {
-      return this;
-    }
-
-  };
-  /**
-   * A compression mode that trades compression ratio for speed. Although the
-   * compression ratio might remain high, compression and decompression are
-   * very fast. Use this mode with indices that have a high update rate but
-   * should be able to load documents from disk quickly.
-   */
-  public static final CompressionMode FAST = new CompressionMode() {
-
-    @Override
-    public Compressor newCompressor() {
-      return new LZ4FastCompressor();
-    }
-
-    @Override
-    public Decompressor newDecompressor() {
-      return LZ4_DECOMPRESSOR;
-    }
-
-    @Override
-    public String toString() {
-      return "FAST";
-    }
-
-  };
   /**
    * This compression mode is similar to {@link #FAST} but it spends more time
    * compressing in order to improve the compression ratio. This compression
@@ -158,8 +115,27 @@ public abstract class CompressionMode {
   };
 
   /**
-   * Sole constructor.
+   * This compression mode is using the QAT
    */
+  public static final CompressionMode QAT = new CompressionMode() {
+
+    @Override
+    public Compressor newCompressor() {
+      return new QatCompressor();
+    }
+
+    @Override
+    public Decompressor newDecompressor() {
+      return new QatDecompressor();
+    }
+
+    @Override
+    public String toString() {
+      return "QAT";
+    }
+  };
+
+  /**Sole constructor.*/
   protected CompressionMode() {
   }
 
@@ -172,6 +148,30 @@ public abstract class CompressionMode {
    * Create a new {@link Decompressor} instance.
    */
   public abstract Decompressor newDecompressor();
+
+  private static final Decompressor LZ4_DECOMPRESSOR = new Decompressor() {
+
+    @Override
+    public void decompress(DataInput in, int originalLength, int offset, int length, BytesRef bytes) throws IOException {
+      assert offset + length <= originalLength;
+      // add 7 padding bytes, this is not necessary but can help decompression run faster
+      if (bytes.bytes.length < originalLength + 7) {
+        bytes.bytes = new byte[ArrayUtil.oversize(originalLength + 7, 1)];
+      }
+      final int decompressedLength = LZ4.decompress(in, offset + length, bytes.bytes, 0);
+      if (decompressedLength > originalLength) {
+        throw new CorruptIndexException("Corrupted: lengths mismatch: " + decompressedLength + " > " + originalLength, in);
+      }
+      bytes.offset = offset;
+      bytes.length = length;
+    }
+
+    @Override
+    public Decompressor clone() {
+      return this;
+    }
+
+  };
 
   private static final class LZ4FastCompressor extends Compressor {
 
@@ -250,7 +250,7 @@ public abstract class CompressionMode {
         }
         if (!decompressor.finished()) {
           throw new CorruptIndexException("Invalid decoder state: needsInput=" + decompressor.needsInput()
-              + ", needsDict=" + decompressor.needsDictionary(), in);
+                                                              + ", needsDict=" + decompressor.needsDictionary(), in);
         }
       } finally {
         decompressor.end();

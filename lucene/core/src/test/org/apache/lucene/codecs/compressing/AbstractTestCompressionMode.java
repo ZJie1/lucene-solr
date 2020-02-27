@@ -52,6 +52,11 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     return arr;
   }
 
+  byte[] compress(byte[] decompressed, int off, int len) throws IOException {
+    Compressor compressor = mode.newCompressor();
+    return compress(compressor, decompressed, off, len);
+  }
+
   static byte[] compress(Compressor compressor, byte[] decompressed, int off, int len) throws IOException {
     byte[] compressed = new byte[len * 2 + 1000]; // should be enough
     ByteArrayDataOutput out = new ByteArrayDataOutput(compressed);
@@ -60,20 +65,15 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
     return ArrayUtil.copyOfSubArray(compressed, 0, compressedLen);
   }
 
+  byte[] decompress(byte[] compressed, int originalLength) throws IOException {
+    Decompressor decompressor = mode.newDecompressor();
+    return decompress(decompressor, compressed, originalLength);
+  }
+
   static byte[] decompress(Decompressor decompressor, byte[] compressed, int originalLength) throws IOException {
     final BytesRef bytes = new BytesRef();
     decompressor.decompress(new ByteArrayDataInput(compressed), originalLength, 0, originalLength, bytes);
     return BytesRef.deepCopyOf(bytes).bytes;
-  }
-
-  byte[] compress(byte[] decompressed, int off, int len) throws IOException {
-    Compressor compressor = mode.newCompressor();
-    return compress(compressor, decompressed, off, len);
-  }
-
-  byte[] decompress(byte[] compressed, int originalLength) throws IOException {
-    Decompressor decompressor = mode.newDecompressor();
-    return decompress(decompressor, compressed, originalLength);
   }
 
   byte[] decompress(byte[] compressed, int originalLength, int offset, int length) throws IOException {
@@ -141,7 +141,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
   }
 
   public void testShortSequence() throws IOException {
-    test(new byte[]{(byte) random().nextInt(256)});
+    test(new byte[] { (byte) random().nextInt(256)});
   }
 
   public void testIncompressible() throws IOException {
@@ -208,7 +208,7 @@ public abstract class AbstractTestCompressionMode extends LuceneTestCase {
         5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85,
         5, 72, 13, 85, 5, 72, 13, 72, 13, 72, 13, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 85, 5, 72, 13, 72, 13, 85, 5, 72, 13, 72,
         13, 85, 5, 72, 13, 72, 13, 85, 5, 72, 13, -19, -24, -101, -35
-    };
+      };
     test(data, 9, data.length - 9);
   }
 

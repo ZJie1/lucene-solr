@@ -343,23 +343,21 @@ public abstract class CompressionMode {
       final int compressedLength = in.readVInt();
       // pad with extra "dummy byte": see javadocs for using Inflater(true)
       // we do it for compliance, but it's unnecessary for years in zlib.
-      final int paddedLength = compressedLength;
-      compressed = ArrayUtil.grow(compressed, paddedLength + 1);
+
+      compressed = new byte[compressedLength];
       in.readBytes(compressed, 0, compressedLength);
-      compressed[compressedLength] = 0; // explicitly set dummy byte to 0
 
       final QatDecompressorJNI decompressor = new QatDecompressorJNI();
 
       try {
         // extra "dummy byte"
-        decompressor.setInput(compressed, 0, paddedLength);
+        decompressor.setInput(compressed, 0, compressedLength);
         bytes.offset = bytes.length = 0;
         bytes.bytes = ArrayUtil.grow(bytes.bytes, originalLength);
         try {
           bytes.length = decompressor.decompress(bytes.bytes, bytes.length, originalLength);
         } catch (Error e) {
-          String s = e.getMessage();
-          System.out.println(e.getMessage());
+          throw new Error(e);
         }
 
         if (!decompressor.finished()) {
@@ -401,7 +399,7 @@ public abstract class CompressionMode {
       compressor.finish();
 
       int totalCount = 0;
-      for (; ; ) {
+      while (!compressor.finished() ) {
         final int count = compressor.compress(compressed, totalCount, compressed.length - totalCount);
         totalCount += count;
         assert totalCount <= compressed.length;

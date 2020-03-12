@@ -36,6 +36,6 @@ public class QatCompressionCompressingCodec extends CompressingCodec {
   public QatCompressionCompressingCodec() {
     // we don't worry about zlib block overhead as it's
     // not bad and try to save space instead:
-    this(61440, 512, false, 1024);
+    this(60*1024, 512, false, 1024);
   }
 }

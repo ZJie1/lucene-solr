@@ -1204,6 +1204,7 @@ public abstract class BaseTermVectorsFormatTestCase extends BaseIndexFileFormatT
     doc.add(new Field("foo", "bar bar", ft));
     iw.addDocument(doc);
     DirectoryReader reader = DirectoryReader.open(iw);
+
     Terms terms = getOnlyLeafReader(reader).getTermVector(0, "foo");
     TermsEnum termsEnum = terms.iterator();
     assertNotNull(termsEnum);

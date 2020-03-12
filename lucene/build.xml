@@ -21,6 +21,9 @@
          xmlns:jacoco="antlib:org.jacoco.ant"
          xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
+  <property name="version.base" value="8.2.0"/>
+  <property name = "lucene_baseCommitID" value="e8494222be8a44678b43f907b47accbda3ebd401"/>
+  
   <import file="common-build.xml"/>
 
   <path id="classpath">
